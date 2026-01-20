@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
+import { Inject, PLATFORM_ID } from '@angular/core';
 
 interface HistoricalPoint {
   timestamp: Date;
@@ -30,10 +31,14 @@ interface AhuChart {
 })
 export class DashboardComponent implements OnInit {
   ahuCharts: AhuChart[] = [];
+  isBrowser = false;
 
+  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
   ngOnInit(): void {
     const today = new Date();
-    const days = 30;
+    const days = 90;
 
     const chartConfigs = [
       { id: 'returnTemp', title: 'RA Temperature', unit: '°C', color: '#28a745' },
@@ -41,26 +46,26 @@ export class DashboardComponent implements OnInit {
       { id: 'outdoorTemp', title: 'OA Temperature', unit: '°C', color: '#ffc107' },
       { id: 'outdoorTemp', title: 'CCPA Temperature', unit: '°C', color: '#ffc107' },
       { id: 'coolingValve', title: 'Valve Position', unit: '%', color: '#dc3545' },
-    //   { id: 'mixedTemp', title: 'Mixed Air Temperature', unit: '°C', color: '#ffc107' },
-    //   { id: 'fanSpeed', title: 'Supply Fan Speed', unit: '%', color: '#17a2b8' },
-    
+      //   { id: 'mixedTemp', title: 'Mixed Air Temperature', unit: '°C', color: '#ffc107' },
+      //   { id: 'fanSpeed', title: 'Supply Fan Speed', unit: '%', color: '#17a2b8' },
     ];
+    if (this.isBrowser) {
+      this.ahuCharts = chartConfigs.map((cfg, idx) => {
+        const rawData = this.generateMockSeries(today, days, idx);
+        const defaultStart = this.toInputDate(this.addDays(today, -7));
+        const defaultEnd = this.toInputDate(today);
+        const filteredData = this.filterByRange(rawData, defaultStart, defaultEnd);
 
-    this.ahuCharts = chartConfigs.map((cfg, idx) => {
-      const rawData = this.generateMockSeries(today, days, idx);
-      const defaultStart = this.toInputDate(this.addDays(today, -7));
-      const defaultEnd = this.toInputDate(today);
-      const filteredData = this.filterByRange(rawData, defaultStart, defaultEnd);
-
-      return {
-        ...cfg,
-        rawData,
-        filteredData,
-        options: this.buildOptions(cfg.title, cfg.unit, cfg.color, filteredData),
-        startDate: defaultStart,
-        endDate: defaultEnd,
-      };
-    });
+        return {
+          ...cfg,
+          rawData,
+          filteredData,
+          options: this.buildOptions(cfg.title, cfg.unit, cfg.color, filteredData),
+          startDate: defaultStart,
+          endDate: defaultEnd,
+        };
+      });
+    }
   }
 
   onDateChange(chart: AhuChart): void {
@@ -81,6 +86,7 @@ export class DashboardComponent implements OnInit {
   }
 
   private generateMockSeries(endDate: Date, days: number, seedOffset: number): HistoricalPoint[] {
+    console.log(days);
     const data: HistoricalPoint[] = [];
     const start = this.addDays(endDate, -days + 1);
 
@@ -112,7 +118,8 @@ export class DashboardComponent implements OnInit {
     return {
       tooltip: {
         trigger: 'axis',
-        valueFormatter: (value: unknown) => (typeof value === 'number' ? `${value} ${unit}` : `${value}`),
+        valueFormatter: (value: unknown) =>
+          typeof value === 'number' ? `${value} ${unit}` : `${value}`,
       },
       grid: { left: 50, right: 20, top: 40, bottom: 40 },
       xAxis: {
@@ -179,4 +186,3 @@ export class DashboardComponent implements OnInit {
     return d;
   }
 }
-

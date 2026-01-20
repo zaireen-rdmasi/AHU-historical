@@ -1,7 +1,7 @@
 <section class="dashboard">
-  <h1 class="dashboard-title">AHU Historical Dashboard</h1>
+  <h1 class="dashboard-title">Historical Dashboard</h1>
   <p class="dashboard-subtitle">
-    Interactive line charts showing AHU historical trends with per-chart date range controls.
+    Interactive line charts showing historical trends with per-chart date range controls.
   </p>
 
   <div class="charts-grid">
@@ -43,9 +43,11 @@
           </div>
 
           <div class="quick-buttons">
-            <button type="button" (click)="setQuickRange(chart, 1)">1D</button>
-            <button type="button" (click)="setQuickRange(chart, 7)">7D</button>
+            <!-- <button type="button" (click)="setQuickRange(chart, 1)">1D</button>
+            <button type="button" (click)="setQuickRange(chart, 7)">7D</button> -->
             <button type="button" (click)="setQuickRange(chart, 30)">30D</button>
+            <button type="button" (click)="setQuickRange(chart, 60)">60D</button>
+            <button type="button" (click)="setQuickRange(chart, 90)">90D</button>
           </div>
         </div>
       </div>
