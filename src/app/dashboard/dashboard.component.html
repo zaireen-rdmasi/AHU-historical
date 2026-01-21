@@ -3,55 +3,6 @@
   <p class="dashboard-subtitle">
     Interactive line charts showing historical trends with per-chart date range controls.
   </p>
+  <button (click)="routeToGraph()">View Graph</button>
 
-  <div class="charts-grid">
-    <div class="chart-card" *ngFor="let chart of ahuCharts">
-      <div class="chart-wrapper">
-        <div
-          class="chart"
-          echarts
-          [options]="chart.options"
-          [autoResize]="true"
-        ></div>
-      </div>
-
-      <div class="chart-controls">
-        <div class="chart-meta">
-          <h2 class="chart-title">{{ chart.title }}</h2>
-          <span class="chart-unit">{{ chart.unit }}</span>
-        </div>
-
-        <div class="date-row">
-          <div class="date-inputs">
-            <label class="date-field">
-              <span>From</span>
-              <input
-                type="date"
-                [(ngModel)]="chart.startDate"
-                (change)="onDateChange(chart)"
-              />
-            </label>
-
-            <label class="date-field">
-              <span>To</span>
-              <input
-                type="date"
-                [(ngModel)]="chart.endDate"
-                (change)="onDateChange(chart)"
-              />
-            </label>
-          </div>
-
-          <div class="quick-buttons">
-            <!-- <button type="button" (click)="setQuickRange(chart, 1)">1D</button>
-            <button type="button" (click)="setQuickRange(chart, 7)">7D</button> -->
-            <button type="button" (click)="setQuickRange(chart, 30)">30D</button>
-            <button type="button" (click)="setQuickRange(chart, 60)">60D</button>
-            <button type="button" (click)="setQuickRange(chart, 90)">90D</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </section>
-

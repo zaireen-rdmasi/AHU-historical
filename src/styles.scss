@@ -1,5 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* Tailwind CSS Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
 /* Liberation Sans Font Face Declarations */
 @font-face {
   font-family: 'Liberation Sans';
@@ -38,7 +44,7 @@
 }
 
 body {
-  background-color: #141414;
+  background-color: #242424;
   color: #FFFFFF;
   font-family: 'Liberation Sans', Arial, sans-serif;
 }
