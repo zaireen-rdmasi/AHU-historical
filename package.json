@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build:graph": "ng build --configuration production --base-href /graph/ --deploy-url /graph/",
+    "build:graph": "ng build --configuration production --base-href /graph/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:ahu-historical": "node dist/ahu-historical/server/server.mjs"
