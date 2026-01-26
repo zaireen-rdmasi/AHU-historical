@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
@@ -10,16 +10,15 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { graphData } from './list_data.development';
+
 interface HistoricalPoint {
   timestamp: Date;
   value: number;
 }
 
-interface DataCharts {
+interface controlChart {
   id: string;
   title: string;
-  value: string;
   unit: string;
   color: string;
   rawData: HistoricalPoint[];
@@ -30,7 +29,7 @@ interface DataCharts {
 }
 
 @Component({
-  selector: 'app-graph',
+  selector: 'app-control',
   imports: [
     CommonModule,
     NgxEchartsDirective,
@@ -39,75 +38,161 @@ interface DataCharts {
     ToastModule,
     ButtonModule,
   ],
-  templateUrl: './graph.html',
-  styleUrl: './graph.scss',
+  templateUrl: './control.html',
+  styleUrl: './control.scss',
   providers: [MessageService],
 })
-export class Graph implements OnInit {
-  dataCharts: DataCharts[] = [];
+export class Control implements OnInit, OnDestroy {
+  controlCharts: controlChart[] = [];
   isBrowser = false;
-  currentData: string | null = null;
-  currentController:any;
+  currentControl: string | null = null;
   currentItems: string[] = [];
-  currentSystem: string = '';
   selectedData: any = [];
-  DataOptions: any = [];
+  dataOptions: any = [];
   selectionError = false;
   maxSelect = 5;
-  private itemConfigMap:any;
   // Mapping from item query parameter values to chart configurations
-  
+  private itemConfigMap: {
+    [key: string]: { id: string; title: string; unit: string; color: string };
+  } = {
+    status: {
+      id: 'status',
+      title: 'Status (On/Off)',
+      unit: '',
+      color: '#28a745',
+    },
+
+    controlMode: {
+      id: 'controlMode',
+      title: 'Control Mode (On, Off, System Timer)',
+      unit: '',
+      color: '#007bff',
+    },
+
+    schedule: {
+      id: 'schedule',
+      title: 'Schedule',
+      unit: '',
+      color: '#6f42c1',
+    },
+
+    inverterControlMode: {
+      id: 'inverterControlMode',
+      title: 'Control Mode (Inverter)',
+      unit: '',
+      color: '#17a2b8',
+    },
+
+    inverterFrequency: {
+      id: 'inverterFrequency',
+      title: 'Inverter Frequency',
+      unit: 'Hz',
+      color: '#fd7e14',
+    },
+
+    chilledWaterValveControlMode: {
+      id: 'chilledWaterValveControlMode',
+      title: 'Control Mode (Chilled Water Valve)',
+      unit: '',
+      color: '#20c997',
+    },
+
+    valvePosition: {
+      id: 'valvePosition',
+      title: 'Valve Position',
+      unit: '%',
+      color: '#ffc107',
+    },
+
+    controlSetpoint: {
+      id: 'controlSetpoint',
+      title: 'Control Setpoint',
+      unit: '°C',
+      color: '#dc3545',
+    },
+
+    chilledWaterPumpControlMode: {
+      id: 'chilledWaterPumpControlMode',
+      title: 'Control Mode (Chilled Water Pump)',
+      unit: '',
+      color: '#6610f2',
+    },
+
+    supplyAirDamperControlMode: {
+      id: 'supplyAirDamperControlMode',
+      title: 'Control Mode (Supply Air Damper)',
+      unit: '',
+      color: '#0d6efd',
+    },
+
+    returnAirDamperControlMode: {
+      id: 'returnAirDamperControlMode',
+      title: 'Control Mode (Return Air Damper)',
+      unit: '',
+      color: '#198754',
+    },
+
+    isoDamperControlMode: {
+      id: 'isoDamperControlMode',
+      title: 'Control Mode (ISO Damper)',
+      unit: '',
+      color: '#adb5bd',
+    },
+
+    freshAirDamperControlMode: {
+      id: 'freshAirDamperControlMode',
+      title: 'Control Mode (Fresh Air Damper)',
+      unit: '',
+      color: '#0dcaf0',
+    },
+
+    overrideDamper: {
+      id: 'overrideDamper',
+      title: 'Override Damper',
+      unit: '',
+      color: '#6c757d',
+    },
+
+    fadSetpoint: {
+      id: 'fadSetpoint',
+      title: 'FAD Setpoint',
+      unit: '%',
+      color: '#ff6f61',
+    },
+  };
+
   constructor(
     @Inject(PLATFORM_ID) platformId: Object,
     private router: Router,
     private route: ActivatedRoute,
-    private messageService: MessageService
+    private messageService: MessageService,
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
 
   ngOnInit(): void {
-    const url = this.router.url; // e.g. /ahu/control
-
-    if (url.startsWith('/ahu/status')) {
-      this.currentSystem = 'ahu status';
-    } else if (url.startsWith('/ahu/vsd')) {
-      this.currentSystem = 'ahu vsd';
-    } else if (url.startsWith('/ahu/vsd')) {
-      this.currentSystem = 'ahu vsd';
-    } else if (url.startsWith('/fcu/status')) {
-      this.currentSystem = 'fcu status';
-    }
-
-    if(this.currentSystem === 'ahu status') {
-      this.itemConfigMap = graphData.itemConfigMapAHUStatus
-    } else if (this.currentSystem === 'ahu vsd') {
-      this.itemConfigMap = graphData.itemConfigMapAHUVSD
-    } else if (this.currentSystem === 'fcu status') {
-      this.itemConfigMap = graphData.itemConfigMapFCUStatus
-    }
-
     this.route.queryParamMap.subscribe((params) => {
       const name = params.get('name');
-      const controller = params.get('controller');
       const items = params.getAll('item');
 
-      this.currentData = name;
-      this.currentController = controller;
+      this.currentControl = name;
       this.currentItems = items.length > 0 ? items : Object.keys(this.itemConfigMap); // Default to all if no items specified
 
+
       this.getDropdown();
-      // this.getGraph(ahu, this.currentItems);
     });
   }
 
+  ngOnDestroy(): void {
+    this.dataOptions = [];
+  }
   getDropdown() {
     const getDropdown = this.currentItems.map((item: any) => ({
       name: this.itemConfigMap[item].title,
       value: item,
     }));
-
-    this.DataOptions = getDropdown;
+    
+    this.dataOptions = getDropdown;
   }
   onChanges(event: any) {
     if (this.selectedData.length > this.maxSelect) {
@@ -122,9 +207,10 @@ export class Graph implements OnInit {
   }
   getData() {
     const items = this.selectedData.map((item: any) => item.value);
-    this.getGraph('ahu', items);
+    console.log(items)
+    this.getGraph('control', items);
   }
-  getGraph(ahu: string | null, items: string[] = []) {
+  getGraph(control: string | null, items: string[] = []) {
     if (!this.isBrowser) {
       return;
     }
@@ -137,10 +223,11 @@ export class Graph implements OnInit {
       .filter((item) => this.itemConfigMap[item]) // Only include items that have a configuration
       .map((item) => this.itemConfigMap[item]);
 
+      console.log(chartConfigs)
     // If no valid items, use all available configurations
     const configsToUse = chartConfigs.length > 0 ? chartConfigs : Object.values(this.itemConfigMap);
 
-    this.dataCharts = configsToUse.map((cfg, idx) => {
+    this.controlCharts = configsToUse.map((cfg, idx) => {
       const rawData = this.generateMockSeries(today, days, idx);
       const defaultStart = this.toInputDate(this.addDays(today, -7));
       const defaultEnd = this.toInputDate(today);
@@ -157,7 +244,7 @@ export class Graph implements OnInit {
     });
   }
 
-  setQuickRange(chart: DataCharts, daysBack: number): void {
+  setQuickRange(chart: controlChart, daysBack: number): void {
     const today = new Date();
     chart.startDate = this.toInputDate(this.addDays(today, -daysBack));
     chart.endDate = this.toInputDate(today);
@@ -171,7 +258,7 @@ export class Graph implements OnInit {
     return `${year}-${month}-${day}`;
   }
 
-  onDateChange(chart: DataCharts): void {
+  onDateChange(chart: controlChart): void {
     if (!chart.startDate || !chart.endDate) {
       return;
     }

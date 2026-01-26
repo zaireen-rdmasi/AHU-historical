@@ -1,0 +1,61 @@
+<div class="p-20 flex flex-col items-center justify-center mb-5">
+  <h1 class="text-3xl font-bold text-blue-600">Historical Graph</h1>
+  @if (currentControl){
+     <p class="text-gray-400">
+    Control: <span class="font-semibold text-white">{{ currentControl }}</span>
+  </p>
+  }
+ 
+  <p>Interactive line charts showing historical trends with per-chart date range controls.</p>
+</div>
+<div class="card flex flex-wrap justify-center gap-2 mb-5">
+  <p-multiselect
+    [options]="dataOptions"
+    [(ngModel)]="selectedData"
+    optionLabel="name"
+    placeholder="Select..."
+    (onChange)="onChanges($event)"
+    [maxSelectedLabels]="5"
+    [filter]="false"
+    [showToggleAll]="false"
+    class="w-full md:w-80"
+  ></p-multiselect>
+ <p-button label="Submit" severity="info" (onClick)="getData()" [disabled]="selectedData.length === 0"/>
+</div>
+<div class="charts-grid">
+  <div class="chart-card" *ngFor="let chart of controlCharts">
+    <div class="chart-wrapper">
+      <div class="chart" echarts [options]="chart.options" [autoResize]="true"></div>
+    </div>
+
+    <div class="chart-controls">
+      <div class="chart-meta">
+        <h2 class="chart-title">{{ chart.title }}</h2>
+        <span class="chart-unit">{{ chart.unit }}</span>
+      </div>
+
+      <div class="date-row">
+        <div class="date-inputs">
+          <label class="date-field">
+            <span>From</span>
+            <input type="date" [(ngModel)]="chart.startDate" (change)="onDateChange(chart)" />
+          </label>
+
+          <label class="date-field">
+            <span>To</span>
+            <input type="date" [(ngModel)]="chart.endDate" (change)="onDateChange(chart)" />
+          </label>
+        </div>
+
+        <div class="quick-buttons">
+          <!-- <button type="button" (click)="setQuickRange(chart, 1)">1D</button>
+          <button type="button" (click)="setQuickRange(chart, 7)">7D</button> -->
+          <button type="button" (click)="setQuickRange(chart, 30)">30D</button>
+          <button type="button" (click)="setQuickRange(chart, 60)">60D</button>
+          <button type="button" (click)="setQuickRange(chart, 90)">90D</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p-toast />
