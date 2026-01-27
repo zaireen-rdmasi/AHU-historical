@@ -103,6 +103,30 @@ export const graphData = {
       unit: '%',
       color: '#198754',
     },
+
+    chwsTemp: {
+      id: 'chwsTemp',
+      title: 'CHWS Temp',
+      value: 'CHWS-Temp',
+      unit: '%',
+      color: '#198754',
+    },
+
+    chwrTemp: {
+      id: 'chwrTemp',
+      title: 'CHWR Temp',
+      value: 'CHWR-Temp',
+      unit: '%',
+      color: '#6276dc',
+    },
+
+    roomTemp: {
+      id: 'roomTemp',
+      title: 'Room Temp',
+      value: 'Room-Temp',
+      unit: '%',
+      color: '#787c94',
+    },
   },
 
   itemConfigMapAHUVSD: {
