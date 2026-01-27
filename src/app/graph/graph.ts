@@ -165,7 +165,7 @@ export class Graph implements OnInit {
     }
 
     this.httpService.postData(url, formData).subscribe({
-      next: async (response: any) => {
+       next: (response: any) => {
         this.getGraphRealData(response);
       },
       error: (error: any) => {},
