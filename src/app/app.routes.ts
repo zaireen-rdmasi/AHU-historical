@@ -14,7 +14,7 @@ export const routes: Routes = [
     path: 'ahu',
     children: [
       { path: 'status', component: Graph },
-      { path: 'control', component: Control },
+      { path: 'control', component: Graph },
       { path: 'vsd', component: Graph },
     ],
   },

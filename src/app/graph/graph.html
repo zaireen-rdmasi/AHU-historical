@@ -23,12 +23,12 @@
   <p-button
     label="Submit"
     severity="info"
-    (onClick)="getData()"
+    (onClick)="apiGetData()"
     [disabled]="selectedData.length === 0"
   />
 </div>
 <div class="charts-grid">
-  @for (chart of dataCharts; track chart.title) {
+  @for (chart of dataCharts; track chart.id) {
     <div class="chart-card">
       <div class="chart-wrapper">
         <div class="chart" echarts [options]="chart.options" [autoResize]="true"></div>
@@ -36,29 +36,57 @@
 
       <div class="chart-controls">
         <div class="chart-meta">
-          <h2 class="chart-title">{{ chart.title }}</h2>
-          <span class="chart-unit">{{ chart.unit }}</span>
+          <h2 class="chart-title">{{ chart.config.title }}</h2>
+          <span class="chart-unit">{{ chart.config.unit }}</span>
         </div>
 
-        <div class="date-row">
-          <div class="date-inputs">
-            <label class="date-field">
-              <span>From</span>
-              <input type="date" [(ngModel)]="chart.startDate" (change)="onDateChange(chart)" />
-            </label>
+        <div class="flex flex-col">
+          <div class="flex flex-wrap mb-5">
+            <div class="date-inputs">
+              <label class="date-field">
+                <span>From</span>
+                <input type="date" [(ngModel)]="chart.startDate" (change)="onDateChangeRealData(chart)" />
+              </label>
 
-            <label class="date-field">
-              <span>To</span>
-              <input type="date" [(ngModel)]="chart.endDate" (change)="onDateChange(chart)" />
-            </label>
+              <label class="date-field">
+                <span>To</span>
+                <input type="date" [(ngModel)]="chart.endDate" (change)="onDateChangeRealData(chart)" />
+              </label>
+            </div>
+            <!-- <div class="flex flex-wrap sm:w-full md:w-1/2 lg:w-1/2 p-1">
+              <span class="w-full">From {{ chart.startDate }}</span>
+              <p-datepicker
+                [(ngModel)]="chart.startDateShow"
+                [iconDisplay]="'input'"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                inputId="icondisplay"
+                [style]="{ width: '100%' }"
+                [inputStyle]="{ width: '100%' }"
+                (input)="onDateChangeRealData(chart)"
+                (onSelect)="onDateChangeRealData2(chart)"
+              />
+            </div>
+
+            <div class="flex flex-wrap sm:w-full md:w-1/2 lg:w-1/2 p-1">
+              <span class="w-full">To {{ chart.endDate }}</span>
+              <p-datepicker
+                [(ngModel)]="chart.endDateShow"
+                [iconDisplay]="'input'"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                inputId="icondisplay"
+                [style]="{ width: '100%' }"
+                [inputStyle]="{ width: '100%' }"
+                (input)="onDateChangeRealData(chart)"
+                (onSelect)="onDateChangeRealData2(chart)"
+              />
+            </div> -->
           </div>
-
-          <div class="quick-buttons">
-            <!-- <button type="button" (click)="setQuickRange(chart, 1)">1D</button>
-          <button type="button" (click)="setQuickRange(chart, 7)">7D</button> -->
-            <button type="button" (click)="setQuickRange(chart, 30)">30D</button>
-            <button type="button" (click)="setQuickRange(chart, 60)">60D</button>
-            <button type="button" (click)="setQuickRange(chart, 90)">90D</button>
+          <div class="quick-buttons justify-end">
+            <button type="button" (click)="setQuickRangeRealData(chart, 30)">30D</button>
+            <button type="button" (click)="setQuickRangeRealData(chart, 60)">60D</button>
+            <button type="button" (click)="setQuickRangeRealData(chart, 90)">90D</button>
           </div>
         </div>
       </div>

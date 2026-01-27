@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Data } from '@angular/router';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { Inject, PLATFORM_ID } from '@angular/core';
@@ -11,6 +11,11 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { graphData } from './list_data.development';
+import { environmentConfig } from '../../environments/environments.development';
+import { HttpService } from '../service/http.service';
+import { HttpClientModule } from '@angular/common/http';
+
+import { DatePickerModule } from 'primeng/datepicker';
 interface HistoricalPoint {
   timestamp: Date;
   value: number;
@@ -20,6 +25,7 @@ interface DataCharts {
   id: string;
   title: string;
   value: string;
+  config: any;
   unit: string;
   color: string;
   rawData: HistoricalPoint[];
@@ -27,6 +33,8 @@ interface DataCharts {
   options: EChartsOption;
   startDate: string;
   endDate: string;
+  startDateShow: Date;
+  endDateShow: Date;
 }
 
 @Component({
@@ -38,53 +46,58 @@ interface DataCharts {
     MultiSelectModule,
     ToastModule,
     ButtonModule,
+    DatePickerModule,
   ],
   templateUrl: './graph.html',
   styleUrl: './graph.scss',
-  providers: [MessageService],
+  providers: [MessageService, HttpClientModule],
 })
 export class Graph implements OnInit {
   dataCharts: DataCharts[] = [];
   isBrowser = false;
-  currentData: string | null = null;
-  currentController:any;
+  currentData: any;
+  currentController: any;
   currentItems: string[] = [];
   currentSystem: string = '';
   selectedData: any = [];
   DataOptions: any = [];
   selectionError = false;
   maxSelect = 5;
-  private itemConfigMap:any;
+  private itemConfigMap: any;
   // Mapping from item query parameter values to chart configurations
-  
+
   constructor(
-    @Inject(PLATFORM_ID) platformId: Object,
+    @Inject(PLATFORM_ID) private platformId: Object,
     private router: Router,
     private route: ActivatedRoute,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private apiConfig: environmentConfig,
+    private httpService: HttpService,
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
 
   ngOnInit(): void {
-    const url = this.router.url; // e.g. /ahu/control
+    const url = this.router.url;
 
     if (url.startsWith('/ahu/status')) {
       this.currentSystem = 'ahu status';
     } else if (url.startsWith('/ahu/vsd')) {
       this.currentSystem = 'ahu vsd';
-    } else if (url.startsWith('/ahu/vsd')) {
-      this.currentSystem = 'ahu vsd';
     } else if (url.startsWith('/fcu/status')) {
       this.currentSystem = 'fcu status';
+    } else if (url.startsWith('/ahu/control')) {
+      this.currentSystem = 'ahu control';
     }
 
-    if(this.currentSystem === 'ahu status') {
-      this.itemConfigMap = graphData.itemConfigMapAHUStatus
+    if (this.currentSystem === 'ahu status') {
+      this.itemConfigMap = graphData?.itemConfigMapAHUStatus;
     } else if (this.currentSystem === 'ahu vsd') {
-      this.itemConfigMap = graphData.itemConfigMapAHUVSD
+      this.itemConfigMap = graphData?.itemConfigMapAHUVSD;
     } else if (this.currentSystem === 'fcu status') {
-      this.itemConfigMap = graphData.itemConfigMapFCUStatus
+      this.itemConfigMap = graphData?.itemConfigMapFCUStatus;
+    } else if (this.currentSystem === 'ahu control') {
+      this.itemConfigMap = graphData?.itemConfigMapAHUControl;
     }
 
     this.route.queryParamMap.subscribe((params) => {
@@ -94,10 +107,12 @@ export class Graph implements OnInit {
 
       this.currentData = name;
       this.currentController = controller;
-      this.currentItems = items.length > 0 ? items : Object.keys(this.itemConfigMap); // Default to all if no items specified
+      // Now this will always work since itemConfigMap is never undefined
+      if (this.itemConfigMap) {
+        this.currentItems = items.length > 0 ? items : Object.keys(this.itemConfigMap);
+      }
 
       this.getDropdown();
-      // this.getGraph(ahu, this.currentItems);
     });
   }
 
@@ -122,46 +137,150 @@ export class Graph implements OnInit {
   }
   getData() {
     const items = this.selectedData.map((item: any) => item.value);
-    this.getGraph('ahu', items);
+
+    // this.getGraphRealData(test);
   }
-  getGraph(ahu: string | null, items: string[] = []) {
-    if (!this.isBrowser) {
-      return;
+
+  apiGetData(data: any = null, type: any = null) {
+    const url = this.apiConfig.apiEndPoint + '/historical-data';
+    const formData = new FormData();
+
+    formData.append('name', this.currentData);
+    formData.append('controller', this.currentController);
+    if (data && data.startDate) {
+      formData.append('start_date', data.startDate);
+    }
+    if (data && data.endDate) {
+      formData.append('end_date', data.endDate);
     }
 
-    const today = new Date();
-    const days = 90;
+    if (type !== 'personal') {
+      this.selectedData.forEach((item: any, index: any) => {
+        if (item.index !== null) {
+          formData.append(`item[${index}]`, this.itemConfigMap[item.value].value);
+        }
+      });
+    } else {
+      formData.append(`item[0]`, data.config.value);
+    }
 
-    // Filter chart configurations based on items query parameter
-    const chartConfigs = items
-      .filter((item) => this.itemConfigMap[item]) // Only include items that have a configuration
-      .map((item) => this.itemConfigMap[item]);
-
-    // If no valid items, use all available configurations
-    const configsToUse = chartConfigs.length > 0 ? chartConfigs : Object.values(this.itemConfigMap);
-
-    this.dataCharts = configsToUse.map((cfg, idx) => {
-      const rawData = this.generateMockSeries(today, days, idx);
-      const defaultStart = this.toInputDate(this.addDays(today, -7));
-      const defaultEnd = this.toInputDate(today);
-      const filteredData = this.filterByRange(rawData, defaultStart, defaultEnd);
-
-      return {
-        ...cfg,
-        rawData,
-        filteredData,
-        options: this.buildOptions(cfg.title, cfg.unit, cfg.color, filteredData),
-        startDate: defaultStart,
-        endDate: defaultEnd,
-      };
+    this.httpService.postData(url, formData).subscribe({
+      next: async (response: any) => {
+        this.getGraphRealData(response);
+      },
+      error: (error: any) => {},
     });
   }
 
-  setQuickRange(chart: DataCharts, daysBack: number): void {
+  getGraphRealData(items: string[] = []) {
+    const chartData = items.map((d: any) => [d.value, d.timestamp]);
+    const itemConfigs = Object.values(this.itemConfigMap);
+  
+
+    const matched = items.map((cd: any) => {
+      const config = itemConfigs.find((cfg: any) => cfg.value === cd.item);
+      return {
+        ...cd,
+        config,
+      };
+    });
+
+    const currentData: any = matched.map((cfg: any, idx: any) => {
+      const color = cfg.config.color;
+      // cfg.title, cfg.unit, cfg.color, filteredData
+      return {
+        ...cfg,
+        id: cfg.config.id,
+        // startDate: ,
+        // endDate: ,
+        // startDateShow: ,
+        // endDateShow: ,
+        options: {
+          tooltip: {
+            trigger: 'axis',
+            valueFormatter: (value: unknown) =>
+              typeof value === 'number' ? `${value} ${cfg.config.unit}` : `${value}`,
+          },
+          grid: { left: 50, right: 20, top: 40, bottom: 40 },
+          xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: this.changeDateChart(cfg.data),
+            splitLine: {
+              show: false,
+            },
+            axisLabel: {
+              color: '#FFFFFF',
+            },
+          },
+          yAxis: {
+            type: 'value',
+            axisLabel: {
+              color: '#FFFFFF',
+              formatter: (val: number) => `${val}${cfg.config.unit}`,
+            },
+            splitLine: {
+              show: false,
+            },
+          },
+          series: [
+            {
+              name: cfg.title,
+              type: 'line',
+              smooth: false,
+              showSymbol: false,
+              itemStyle: { color },
+              lineStyle: { width: 2, color },
+              data: cfg.data.map((p: any) => p.value),
+            },
+          ],
+        },
+      };
+    });
+
+    this.dataCharts = currentData;
+  }
+
+  changeDateChart(data: any) {
+    const newDate = data.map((p: any) => {
+      const date = new Date(p.timestamp);
+
+      const formatted =
+        String(date.getDate()).padStart(2, '0') +
+        '-' +
+        String(date.getMonth() + 1).padStart(2, '0') +
+        '-' +
+        date.getFullYear() +
+        ' ' +
+        String(date.getHours()).padStart(2, '0') +
+        ':' +
+        String(date.getMinutes()).padStart(2, '0');
+
+      return formatted;
+    });
+
+    return newDate;
+  }
+
+  onDateChangeRealData(chart: any): void {
+    if (!chart.startDate || !chart.endDate) {
+      return;
+    } else {
+      // chart.startDate = this.toInputDate(chart.startDate);
+      // chart.endDate = this.toInputDate(chart.endDate);
+
+      this.apiGetData(chart, 'personal');
+    }
+  }
+
+  setQuickRangeRealData(chart: DataCharts, daysBack: number): void {
     const today = new Date();
+    chart.startDate = '';
+    chart.endDate = '';
     chart.startDate = this.toInputDate(this.addDays(today, -daysBack));
     chart.endDate = this.toInputDate(today);
-    this.onDateChange(chart);
+
+    this.apiGetData(chart, 'personal');
   }
 
   private toInputDate(date: Date): string {
@@ -171,106 +290,12 @@ export class Graph implements OnInit {
     return `${year}-${month}-${day}`;
   }
 
-  onDateChange(chart: DataCharts): void {
-    if (!chart.startDate || !chart.endDate) {
-      return;
-    }
-
-    const filtered = this.filterByRange(chart.rawData, chart.startDate, chart.endDate);
-    chart.filteredData = filtered;
-    chart.options = this.buildOptions(chart.title, chart.unit, chart.color, filtered);
-  }
   private addDays(date: Date, diff: number): Date {
     const d = new Date(date);
     d.setDate(d.getDate() + diff);
     return d;
   }
 
-  private filterByRange(data: HistoricalPoint[], start: string, end: string): HistoricalPoint[] {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    return data.filter(
-      (p) => p.timestamp >= this.atStartOfDay(startDate) && p.timestamp <= this.atEndOfDay(endDate),
-    );
-  }
-
-  private generateMockSeries(endDate: Date, days: number, seedOffset: number): HistoricalPoint[] {
-    const data: HistoricalPoint[] = [];
-    const start = this.addDays(endDate, -days + 1);
-
-    let base = 20 + seedOffset * 2;
-    for (let i = 0; i < days; i++) {
-      const ts = this.addDays(start, i);
-      const dailyVariation = Math.sin((i / days) * Math.PI * 2) * 3;
-      const randomNoise = (Math.random() - 0.5) * 2;
-      const value = Math.round((base + dailyVariation + randomNoise) * 10) / 10;
-      data.push({ timestamp: ts, value });
-    }
-    return data;
-  }
-  private buildOptions(
-    title: string,
-    unit: string,
-    color: string,
-    seriesData: HistoricalPoint[],
-  ): EChartsOption {
-    return {
-      tooltip: {
-        trigger: 'axis',
-        valueFormatter: (value: unknown) =>
-          typeof value === 'number' ? `${value} ${unit}` : `${value}`,
-      },
-      grid: { left: 50, right: 20, top: 40, bottom: 40 },
-      xAxis: {
-        type: 'category',
-        boundaryGap: false,
-        data: seriesData.map((p) => this.toLabelDate(p.timestamp)),
-        splitLine: {
-          show: false,
-        },
-        axisLabel: {
-          color: '#FFFFFF',
-        },
-      },
-      yAxis: {
-        type: 'value',
-        axisLabel: {
-          color: '#FFFFFF',
-          formatter: (val: number) => `${val}${unit}`,
-        },
-        splitLine: {
-          show: false,
-        },
-      },
-      series: [
-        {
-          name: title,
-          type: 'line',
-          smooth: false,
-          showSymbol: false,
-          itemStyle: { color },
-          lineStyle: { width: 2, color },
-          data: seriesData.map((p) => p.value),
-        },
-      ],
-    };
-  }
-
-  private toLabelDate(date: Date): string {
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  }
-
-  private atStartOfDay(date: Date): Date {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }
-
-  private atEndOfDay(date: Date): Date {
-    const d = new Date(date);
-    d.setHours(23, 59, 59, 999);
-    return d;
-  }
   private showToast() {
     this.messageService.add({
       severity: 'error',

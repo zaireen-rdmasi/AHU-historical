@@ -223,4 +223,111 @@ export const graphData = {
       color: '#198754',
     },
   },
+
+  itemConfigMapAHUControl: {
+    status: {
+      id: 'status',
+      title: 'Status (On/Off)',
+      unit: '',
+      color: '#28a745',
+    },
+
+    controlMode: {
+      id: 'controlMode',
+      title: 'Control Mode (On, Off, System Timer)',
+      unit: '',
+      color: '#007bff',
+    },
+
+    schedule: {
+      id: 'schedule',
+      title: 'Schedule',
+      unit: '',
+      color: '#6f42c1',
+    },
+
+    inverterControlMode: {
+      id: 'inverterControlMode',
+      title: 'Control Mode (Inverter)',
+      unit: '',
+      color: '#17a2b8',
+    },
+
+    inverterFrequency: {
+      id: 'inverterFrequency',
+      title: 'Inverter Frequency',
+      unit: 'Hz',
+      color: '#fd7e14',
+    },
+
+    chilledWaterValveControlMode: {
+      id: 'chilledWaterValveControlMode',
+      title: 'Control Mode (Chilled Water Valve)',
+      unit: '',
+      color: '#20c997',
+    },
+
+    valvePosition: {
+      id: 'valvePosition',
+      title: 'Valve Position',
+      unit: '%',
+      color: '#ffc107',
+    },
+
+    controlSetpoint: {
+      id: 'controlSetpoint',
+      title: 'Control Setpoint',
+      unit: '°C',
+      color: '#dc3545',
+    },
+
+    chilledWaterPumpControlMode: {
+      id: 'chilledWaterPumpControlMode',
+      title: 'Control Mode (Chilled Water Pump)',
+      unit: '',
+      color: '#6610f2',
+    },
+
+    supplyAirDamperControlMode: {
+      id: 'supplyAirDamperControlMode',
+      title: 'Control Mode (Supply Air Damper)',
+      unit: '',
+      color: '#0d6efd',
+    },
+
+    returnAirDamperControlMode: {
+      id: 'returnAirDamperControlMode',
+      title: 'Control Mode (Return Air Damper)',
+      unit: '',
+      color: '#198754',
+    },
+
+    isoDamperControlMode: {
+      id: 'isoDamperControlMode',
+      title: 'Control Mode (ISO Damper)',
+      unit: '',
+      color: '#adb5bd',
+    },
+
+    freshAirDamperControlMode: {
+      id: 'freshAirDamperControlMode',
+      title: 'Control Mode (Fresh Air Damper)',
+      unit: '',
+      color: '#0dcaf0',
+    },
+
+    overrideDamper: {
+      id: 'overrideDamper',
+      title: 'Override Damper',
+      unit: '',
+      color: '#6c757d',
+    },
+
+    fadSetpoint: {
+      id: 'fadSetpoint',
+      title: 'FAD Setpoint',
+      unit: '%',
+      color: '#ff6f61',
+    },
+  },
 };
