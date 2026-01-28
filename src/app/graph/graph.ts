@@ -216,10 +216,7 @@ export class Graph implements OnInit {
         cfg.config.title.toLowerCase().includes('status') ||
         cfg.config.title.toLowerCase().includes('schedule');
       const isControl = cfg.config.title.toLowerCase().includes('control mode');
-      const isStateSeries =
-        cfg.config.title.toLowerCase().includes('status') ||
-        cfg.config.title.toLowerCase().includes('schedule') ||
-        cfg.config.title.toLowerCase().includes('control mode');
+
 
       // cfg.title, cfg.unit, cfg.color, filteredData
       return {
@@ -269,7 +266,7 @@ export class Graph implements OnInit {
                   type: 'value', // numeric chart
                   axisLabel: {
                     color: '#FFFFFF',
-                    formatter: (v: any) => v, // keep normal numbers
+                    formatter: (val: number) => `${val}${cfg.config.unit}`,
                   },
                 },
 
@@ -287,7 +284,6 @@ export class Graph implements OnInit {
         },
       };
     });
-
     if (this.dataCharts.length !== 0) {
       const updatedData = this.dataCharts.map((item: any) => {
         if (item.item !== currentData.item) {
