@@ -249,9 +249,10 @@ export const graphData = {
   },
 
   itemConfigMapAHUControl: {
-    status: {
-      id: 'status',
+    ahuStatus: {
+      id: 'ahuStatus',
       title: 'Status (On/Off)',
+      value: 'Status',
       unit: '',
       color: '#28a745',
     },
@@ -259,6 +260,7 @@ export const graphData = {
     controlMode: {
       id: 'controlMode',
       title: 'Control Mode (On, Off, System Timer)',
+      value: 'Control-Mode',
       unit: '',
       color: '#007bff',
     },
@@ -266,34 +268,39 @@ export const graphData = {
     schedule: {
       id: 'schedule',
       title: 'Schedule',
+      value: 'GPT-Signal',
       unit: '',
       color: '#6f42c1',
     },
 
-    inverterControlMode: {
+    controlModeInverter: {
       id: 'inverterControlMode',
       title: 'Control Mode (Inverter)',
+      value: 'VSD-Control-Mode',
       unit: '',
       color: '#17a2b8',
     },
 
-    inverterFrequency: {
-      id: 'inverterFrequency',
-      title: 'Inverter Frequency',
+    overrideVSDSpeed: {
+      id: 'overrideVSDSpeed',
+      title: 'Override VSD',
+      value: 'Override-VSD',
       unit: 'Hz',
       color: '#fd7e14',
     },
 
-    chilledWaterValveControlMode: {
-      id: 'chilledWaterValveControlMode',
+    controlModeCHW: {
+      id: 'controlModeCHW',
       title: 'Control Mode (Chilled Water Valve)',
+      value: 'Valve-Control-Mode',
       unit: '',
       color: '#20c997',
     },
 
-    valvePosition: {
-      id: 'valvePosition',
+    overrideValve: {
+      id: 'overrideValve',
       title: 'Valve Position',
+      value: 'Valve-CMD',
       unit: '%',
       color: '#ffc107',
     },
@@ -301,41 +308,47 @@ export const graphData = {
     controlSetpoint: {
       id: 'controlSetpoint',
       title: 'Control Setpoint',
+      value: 'Valve-Temp-SP',
       unit: '°C',
       color: '#dc3545',
     },
 
-    chilledWaterPumpControlMode: {
-      id: 'chilledWaterPumpControlMode',
+    controlModeCWP: {
+      id: 'controlModeCWP',
       title: 'Control Mode (Chilled Water Pump)',
+      value: 'CWP-Control-Mode',
       unit: '',
       color: '#6610f2',
     },
 
-    supplyAirDamperControlMode: {
-      id: 'supplyAirDamperControlMode',
+    controlModeSAD: {
+      id: 'controlModeSAD',
       title: 'Control Mode (Supply Air Damper)',
+      value: 'SAD-Control-Mode',
       unit: '',
       color: '#0d6efd',
     },
 
-    returnAirDamperControlMode: {
-      id: 'returnAirDamperControlMode',
+    controlModeRAD: {
+      id: 'controlModeRAD',
       title: 'Control Mode (Return Air Damper)',
+      value: 'RAD-Control-Mode',
       unit: '',
       color: '#198754',
     },
 
-    isoDamperControlMode: {
-      id: 'isoDamperControlMode',
+    controlModeISOD: {
+      id: 'controlModeISOD',
       title: 'Control Mode (ISO Damper)',
+      value: 'ISOD-Control-Mode',
       unit: '',
       color: '#adb5bd',
     },
 
-    freshAirDamperControlMode: {
-      id: 'freshAirDamperControlMode',
+    controlModeFAD: {
+      id: 'controlModeFAD',
       title: 'Control Mode (Fresh Air Damper)',
+      value: 'FAD-Control-Mode',
       unit: '',
       color: '#0dcaf0',
     },
@@ -343,15 +356,41 @@ export const graphData = {
     overrideDamper: {
       id: 'overrideDamper',
       title: 'Override Damper',
+      value: 'Override-FAD',
       unit: '',
       color: '#6c757d',
     },
 
     fadSetpoint: {
-      id: 'fadSetpoint',
+      id: 'fadSetfadSetpointpoint',
       title: 'FAD Setpoint',
+      value: 'FAD-Temp-SP',
       unit: '%',
       color: '#ff6f61',
+    },
+
+    bypassSadMode: {
+      id: 'bypassSadMode',
+      title: 'ISOD Supply Control Mode',
+      value: 'ISOD-Supply-Control-Mode',
+      unit: '%',
+      color: '#0ad2e9',
+    },
+
+    // bypassRadStatus: {
+    //   id: 'bypassRadStatus',
+    //   title: 'RAD Control Mode',
+    //   value: 'RAD-Control-Mode', //TBC
+    //   unit: '%',
+    //   color: '#0ad2e9',
+    // },
+
+    damperControlMode: {
+      id: 'damperControlMode',
+      title: 'Damper Control Mode',
+      value: 'Damper-Control-Mode',
+      unit: '%',
+      color: '#0ad2e9',
     },
   },
 };

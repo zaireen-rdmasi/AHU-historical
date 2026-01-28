@@ -8,7 +8,7 @@
 
   <p>Interactive line charts showing historical trends with per-chart date range controls.</p>
 </div>
-<div class="card flex flex-wrap justify-center gap-2 mb-5">
+<div class="card flex flex-wrap items-center justify-center gap-2 mb-5">
   <p-multiselect
     [options]="DataOptions"
     [(ngModel)]="selectedData"
@@ -18,20 +18,35 @@
     [maxSelectedLabels]="5"
     [filter]="false"
     [showToggleAll]="false"
+    [disabled]="dataCharts.length !== 0"
     class="w-full md:w-80"
   ></p-multiselect>
-  <p-button
-    label="Submit"
-    severity="info"
-    (onClick)="apiGetData()"
-    [disabled]="selectedData.length === 0"
-  />
+
+  @if (dataCharts.length !== 0) {
+    <p-button
+      icon="pi pi-times"
+      label="Clear"
+      [rounded]="true"
+      severity="danger"
+      size="small"
+      (onClick)="dataCharts = []"
+    />
+  } @else {
+    <p-button
+      label="Submit"
+      severity="info"
+      [rounded]="true"
+      size="small"
+      (onClick)="apiGetData()"
+      [disabled]="dataCharts.length !== 0"
+    />
+  }
 </div>
 <div class="charts-grid">
   @for (chart of dataCharts; track chart.id) {
     <div class="chart-card">
       <div class="chart-wrapper">
-        <div class="chart" echarts [options]="chart.options" [autoResize]="true"></div>
+        <div class="chart" echarts [options]="chart.options"></div>
       </div>
 
       <div class="chart-controls">
@@ -45,12 +60,20 @@
             <div class="date-inputs">
               <label class="date-field">
                 <span>From</span>
-                <input type="date" [(ngModel)]="chart.startDate" (change)="onDateChangeRealData(chart)" />
+                <input
+                  type="date"
+                  [(ngModel)]="chart.startDate"
+                  (change)="onDateChangeRealData(chart)"
+                />
               </label>
 
               <label class="date-field">
                 <span>To</span>
-                <input type="date" [(ngModel)]="chart.endDate" (change)="onDateChangeRealData(chart)" />
+                <input
+                  type="date"
+                  [(ngModel)]="chart.endDate"
+                  (change)="onDateChangeRealData(chart)"
+                />
               </label>
             </div>
             <!-- <div class="flex flex-wrap sm:w-full md:w-1/2 lg:w-1/2 p-1">

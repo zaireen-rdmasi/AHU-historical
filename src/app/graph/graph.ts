@@ -14,7 +14,7 @@ import { graphData } from './list_data.development';
 import { environmentConfig } from '../../environments/environments.development';
 import { HttpService } from '../service/http.service';
 import { HttpClientModule } from '@angular/common/http';
-
+import { ChangeDetectorRef } from '@angular/core';
 import { DatePickerModule } from 'primeng/datepicker';
 interface HistoricalPoint {
   timestamp: Date;
@@ -73,6 +73,7 @@ export class Graph implements OnInit {
     private messageService: MessageService,
     private apiConfig: environmentConfig,
     private httpService: HttpService,
+    private cdr: ChangeDetectorRef,
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -165,7 +166,20 @@ export class Graph implements OnInit {
     }
 
     this.httpService.postData(url, formData).subscribe({
-       next: (response: any) => {
+      next: (response: any) => {
+        // const mapResponse = response.map((x: any) => ({
+        //   ...x,
+        //   data: x.data.map((y: any) => ({
+        //     ...y,
+        //     value: y.state ? y.state : y.value,
+        //   })),
+        // }));
+
+        if (!type) {
+          if (this.dataCharts.length !== 0) {
+            this.dataCharts = [];
+          }
+        }
         this.getGraphRealData(response);
       },
       error: (error: any) => {},
@@ -175,7 +189,6 @@ export class Graph implements OnInit {
   getGraphRealData(items: string[] = []) {
     const chartData = items.map((d: any) => [d.value, d.timestamp]);
     const itemConfigs = Object.values(this.itemConfigMap);
-  
 
     const matched = items.map((cd: any) => {
       const config = itemConfigs.find((cfg: any) => cfg.value === cd.item);
@@ -187,14 +200,31 @@ export class Graph implements OnInit {
 
     const currentData: any = matched.map((cfg: any, idx: any) => {
       const color = cfg.config.color;
+
+      const controlMode: any = {
+        0: 'Manual Off',
+        1: 'Manual On',
+        2: 'System Timer',
+      };
+
+      const status: any = {
+        0: 'Off',
+        1: 'On',
+      };
+
+      const isScheduleStatus =
+        cfg.config.title.toLowerCase().includes('status') ||
+        cfg.config.title.toLowerCase().includes('schedule');
+      const isControl = cfg.config.title.toLowerCase().includes('control mode');
+      const isStateSeries =
+        cfg.config.title.toLowerCase().includes('status') ||
+        cfg.config.title.toLowerCase().includes('schedule') ||
+        cfg.config.title.toLowerCase().includes('control mode');
+
       // cfg.title, cfg.unit, cfg.color, filteredData
       return {
         ...cfg,
         id: cfg.config.id,
-        // startDate: ,
-        // endDate: ,
-        // startDateShow: ,
-        // endDateShow: ,
         options: {
           tooltip: {
             trigger: 'axis',
@@ -213,16 +243,36 @@ export class Graph implements OnInit {
               color: '#FFFFFF',
             },
           },
-          yAxis: {
-            type: 'value',
-            axisLabel: {
-              color: '#FFFFFF',
-              formatter: (val: number) => `${val}${cfg.config.unit}`,
-            },
-            splitLine: {
-              show: false,
-            },
-          },
+          yAxis: isScheduleStatus
+            ? {
+                type: 'value', // or 'category' if you prefer
+                min: 0, // ⬅️ key line
+                max: Object.keys(status).length - 1, // number of states - 1
+                interval: 1, // key to remove intermediate decimals
+                axisLabel: {
+                  color: '#FFFFFF',
+                  formatter: (v: any) => status[v] ?? '',
+                },
+              }
+            : isControl
+              ? {
+                  type: 'value', // or 'category' if you prefer
+                  min: 0,
+                  max: Object.keys(controlMode).length - 1, // number of states - 1
+                  interval: 1, // key to remove intermediate decimals
+                  axisLabel: {
+                    color: '#FFFFFF',
+                    formatter: (v: any) => controlMode[v] ?? '',
+                  },
+                }
+              : {
+                  type: 'value', // numeric chart
+                  axisLabel: {
+                    color: '#FFFFFF',
+                    formatter: (v: any) => v, // keep normal numbers
+                  },
+                },
+
           series: [
             {
               name: cfg.title,
@@ -238,7 +288,34 @@ export class Graph implements OnInit {
       };
     });
 
-    this.dataCharts = currentData;
+    if (this.dataCharts.length !== 0) {
+      const updatedData = this.dataCharts.map((item: any) => {
+        if (item.item !== currentData.item) {
+          return item; // untouched
+        }
+
+        return {
+          ...item, // keeps startDate & endDate
+          ...currentData, // updates with new data
+          startDate: item.startDate,
+          endDate: item.endDate,
+        };
+      });
+      this.dataCharts = updatedData;
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
+    } else {
+      this.dataCharts = currentData;
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
+
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
+    }
   }
 
   changeDateChart(data: any) {
